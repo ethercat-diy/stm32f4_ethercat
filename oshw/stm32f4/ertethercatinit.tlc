@@ -1,0 +1,114 @@
+%% File : xpcethercatinit.tlc
+%%
+%% Description: 
+%%   TLC Code Generation file for GenericFilter
+%%
+
+%% Copyright 2009-2010 The MathWorks, Inc.
+
+
+%implements ertethercatinit  "C"
+
+
+%% Function: Start ============================================================
+%%
+%function Start(block, system) Output
+	%<LibAddToCommonIncludes("stm32f4xx_gpio.h")>
+	%<LibAddToCommonIncludes("stm32f4xx_rcc.h")>
+	{
+	
+%%		RCC_AHB1PeriphClockCmd(GpioClockEnableBit(GPIOD), ENABLE);
+%%		RCC_AHB1PeriphClockCmd(((uint32_t) (1U << (uint32_t)GPIOD)), ENABLE);
+		RCC_AHB1PeriphClockCmd((uint32_t) (1U << 3U), ENABLE);
+		
+		GPIO_InitTypeDef gpioInit;
+		GPIO_StructInit(&gpioInit);
+		gpioInit.GPIO_Pin  = GPIO_Pin_12;
+%%		gpioInit.GPIO_Pin  = 12;
+		gpioInit.GPIO_Mode = GPIO_Mode_OUT;
+		GPIO_Init(GPIOD,&gpioInit);
+		GPIO_WriteBit(GPIOD, GPIO_Pin_12,1);
+		
+		ec_init("");
+
+      /* From LinkOsLayer.h   Intel PRO-100 specific definitions */
+   }
+%endfunction
+
+%function BlockTypeSetup(block, system) void
+    %<LibAddToCommonIncludes("stddef.h")>
+    %<LibAddToCommonIncludes("stdlib.h")>
+
+%endfunction
+
+%% Function: BlockInstanceSetup ===========================================
+%%
+%function BlockInstanceSetup(block, system) void
+
+%%  %<LibAddToCommonIncludes(xml_include_file)>
+%%	%<LibAddToModelSources("stm32f4xx_gpio")>
+	%assign pathErtEthercat = FEVAL("getErtEthercatPath")
+	%assign pathEthercatMain=pathErtEthercat+"/../../soem/ethercatmain"
+	%<LibAddToModelSources(pathEthercatMain)>
+	%assign pathEthercatBase=pathErtEthercat+"/../../soem/ethercatbase"
+	%<LibAddToModelSources(pathEthercatBase)>
+	%assign pathEthercatNicdrv=pathErtEthercat+"/nicdrv"
+	%<LibAddToModelSources(pathEthercatNicdrv)>
+	%assign pathEthercatHw=pathErtEthercat+"/oshw"
+	%<LibAddToModelSources(pathEthercatHw)>
+	%assign pathEthercatOsal=pathErtEthercat+"/../../osal/stm32f4/osal"
+	%<LibAddToModelSources(pathEthercatOsal)>
+	
+    %% Test for the presence of the EtherCAT library
+       %assign fileName=FEVAL("xpcroot") + "/target/build/xpcblocks/lib/AtEcat_xpc_vc.lib"
+       %if !FEVAL("exist", fileName)
+           %exit xPCTarget: EtherCAT: To enable functionality, download EtherCAT library from www.mathworks.com/programs/ethercat/
+       %endif
+
+%endfunction
+
+
+%% Function: Outputs ======================================================
+%%
+%function Outputs(block, system) Output
+  %% No ouputs.
+  %% Call the error handler and handler.
+  
+  %openfile buffer
+   
+      /*------------ %<Type> Block: %<Name> Process Received Frames ------------*/
+      
+      
+%%      xpcEtherCATReadProcessData(%<deviceIndex>,NULL);
+    
+   %closefile buffer
+  %<LibSystemOutputCustomCode(system, buffer, "header" )>
+    
+   %openfile buffer
+   {
+
+   
+      // Clear all momentary triggered values
+    }
+   %closefile buffer
+   %<LibSystemOutputCustomCode(system, buffer, "trailer" )>  
+ %endfunction
+
+%% Function: Terminate ===========================================
+%%
+%function Terminate(block, system) Output
+  
+    
+  %openfile buffer
+   
+      /*------------ %<Type> Block: %<Name> Process Shutdown Network ------------*/
+   {
+      
+
+   }  
+    
+   %closefile buffer
+  %<LibMdlTerminateCustomCode( buffer, "trailer" )>
+
+%endfunction
+
